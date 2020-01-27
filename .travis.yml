@@ -1,0 +1,15 @@
+language: node_js
+os:
+  - linux
+  - osx
+  - windows
+node_js:
+  - 8
+  - 10
+  - 12
+jobs:
+  include:
+    - stage: Code Coverage
+      if: branch = master
+      node_js: 12
+      script: npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage

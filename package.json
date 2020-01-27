@@ -1,0 +1,60 @@
+{
+  "name": "s3lite",
+  "description": "SQLite client for Node.js with database storage on aws s3 bucket",
+  "version": "0.0.1",
+  "repository": "s3lite/s3lite",
+  "author": "Artur FanFataL Grzybowski <artur@fanfatal.pl> (https://www.fanfatal.pl)",
+  "keywords": [
+    "async",
+    "aws",
+    "aws-sdk",
+    "bucket",
+    "database",
+    "db",
+    "es6",
+    "promise",
+    "s3",
+    "sqlite",
+    "sql"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.596.0",
+    "md5": "^2.2.1",
+    "mkdirp": "^0.5.1",
+    "sqlite3": "^4.1.1"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.9",
+    "jest": "^24.9.0",
+    "jest-extended": "^0.11.2",
+    "prettier-standard": "^16.1.0",
+    "standard": "^14.3.1"
+  },
+  "scripts": {
+    "format": "prettier-standard --format && standard --fix",
+    "lint": "standard",
+    "test": "jest",
+    "coverage": "jest --coverage"
+  },
+  "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageReporters": [
+      "lcov",
+      "json",
+      "text-summary"
+    ],
+    "setupFilesAfterEnv": [
+      "jest-extended"
+    ]
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ]
+  }
+}
