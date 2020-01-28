@@ -13,7 +13,7 @@ module.exports = function ({ executor }) {
     executor.exec({ method: 'all', sql, params }).then(({ result }) => result)
 
   /**
-   * @param sql
+   * @param {string} sql
    * @return {Promise<{sql: string}>}
    * @async
    */
