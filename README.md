@@ -1,4 +1,5 @@
-# ![S3Lite → SQLite + S3](https://avatars0.githubusercontent.com/u/60323596?s=36&v=4 "S3Lite → SQLite + S3") S3Lite → SQLite + S3
+# [![S3Lite → SQLite + S3](https://avatars0.githubusercontent.com/u/60323596?s=36&v=4)](https://github.com/s3lite/s3lite) S3Lite → SQLite + S3
+
 
 [![Build Status](https://img.shields.io/travis/com/s3lite/s3lite)](https://travis-ci.com/s3lite/s3lite)
 [![Code Coverage](https://img.shields.io/coveralls/github/s3lite/s3lite)](https://coveralls.io/github/s3lite/s3lite)
@@ -106,7 +107,7 @@ Perform a query
 // async/await
 const data = await db.get('SELECT id, name FROM table')
 // promise
-db.all('SELECT id, name FROM table').then(data => {
+db.get('SELECT id, name FROM table').then(data => {
   console.log(data)
 })
 /*
@@ -176,4 +177,117 @@ db.run("INSERT INTO test VALUES(NULL, 'foo1', 1)").then(result => {
 
 ---
 
+#### [Database.prepare](#databaseprepare)
+
+`async` `prepare (sql, [params...])` `→` `{Promise<Statement>}`
+
+Prepare a statement
+
+**Parameters:**
+
+- `{string} sql`: The SQL query to run.
+- `{...*|Object|Array} [params]` _(optional)_:
+
+**Returns:**
+
+- `{Promise<Statement>}`:
+
+```javascript
+// async/await
+const stmt = await db.prepare("INSERT INTO test VALUES(NULL, ?, ?)")
+// promise
+db.prepare("INSERT INTO test VALUES(NULL, ?, ?)").then(stmt => {
+  // stmt {Statement}
+})
+```
+
+---
+
 ### Statement
+
+#### [Statement.all](#statementall)
+
+`async` `all ([params...])` `→` `{Promise<Array>}`
+
+Perform a query
+
+**Parameters:**
+
+- `{...*|Object|Array} [params]` _(optional)_:
+
+**Returns:**
+
+- `{Promise<Array>}`:
+
+```javascript
+// async/await
+const data = await stmt.all()
+// promise
+stmt.all().then(data => {
+  console.log(data)
+})
+/*
+[
+  { id: 1, name: 'test1' },
+  { id: 2, name: 'test2' }
+]
+*/
+```
+
+---
+
+#### [Statement.get](#statementget)
+
+`async` `get ([params...])` `→` `{Promise<Object>}`
+
+Perform a query
+
+**Parameters:**
+
+- `{...*|Object|Array} [params]` _(optional)_:
+
+**Returns:**
+
+- `{Promise<Object|undefined>}`:
+
+```javascript
+// async/await
+const data = await stmt.get()
+// promise
+stmt.get().then(data => {
+  console.log(data)
+})
+/*
+{ id: 1, name: 'test1' }
+*/
+```
+
+---
+
+#### [Statement.run](#statementrun)
+
+`async` `run ([params...])` `→` `{Promise<Statement>}`
+
+Perform a query
+
+**Parameters:**
+
+- `{...*|Object|Array} [params]` _(optional)_:
+
+**Returns:**
+
+- `{Promise<Statement>}`:
+
+```javascript
+// async/await
+const result = await stmt.run('foo')
+// promise
+stmt.run('foo').then(stmt => {
+  console.log(stmt)
+})
+/*
+// stmt {Statement}
+*/
+```
+
+---
