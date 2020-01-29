@@ -16,7 +16,7 @@ A wrapper library for SQLite that keeps database file on Amazon S3 storage and a
 - [How It Works](#how-it-works)
 - [API Documentation](#api-documentation)
   - [S3Lite](#s3lite)
-    - [S3Lite.database(s3FileName, [options])](#s3lite-database)
+    - [S3Lite.database(s3FileName, [options])](#s3litedatabase)
   - [Database](#database)
     - [Database.all(sql, [param, ...])](#databaseall)
     - [Database.get(sql, [param, ...])](#databaseget)
@@ -52,7 +52,75 @@ const db = S3Lite.database(
 const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 ```
 
+## How It Works
+
+How it works
+
+Minimal AWS S3 Policy to library works:
+```json
+{
+  "Id": "S3LitePolicyId",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3LiteStatementPolicyId",
+      "Action": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::bucket-name/database.sqlite",
+        "arn:aws:s3:::bucket-name/database.sqlite.lock"
+      ],
+      "Principal": {
+        
+      }
+    }
+  ]
+}
+```
+
 ## API Documentation
+
+### S3Lite
+
+#### [S3Lite.database](#s3litedatabase)
+
+`static` `database (s3FileName, [options])` `→` `{Database}`
+
+Init Database object
+
+**Parameters:**
+
+- `{string} s3FileName`: Filename
+- `{Object} [options]` _(optional)_:
+  - `{string} [options.localFilePath]`
+  - `{Object} [options.s3Options]`
+  - `{number} [options.acquireLockRetryTimeout]`
+  - `{number} [options.remoteDatabaseCacheTime]`
+  - `{number} [options.maxRetryOnRemoteDatabaseUpdated]`
+  - `{number} [options.maxLockLifetime]`
+  - `{number} [options.minLockLifetime]`
+
+**Returns:**
+
+- `{Database}`:
+
+```javascript
+const db = S3Lite.database(
+  'https://bucket-name.s3.eu-central-1.amazonaws.com/database.sqlite',
+  {
+    s3Options: {
+      accessKeyId: 'AWS_ACCESS_KEY_ID',
+      secretAccessKey: 'AWS_SECRET_ACCESS_KEY'
+    }
+  }
+)
+```
+
+---
 
 ### Database
 
@@ -283,6 +351,54 @@ Perform a query
 const result = await stmt.run('foo')
 // promise
 stmt.run('foo').then(stmt => {
+  console.log(stmt)
+})
+/*
+// stmt {Statement}
+*/
+```
+
+---
+
+#### [Statement.reset](#statementreset)
+
+`async` `reset ()` `→` `{Promise<Statement>}`
+
+Perform a query
+
+**Returns:**
+
+- `{Promise<Statement>}`:
+
+```javascript
+// async/await
+const result = await stmt.reset()
+// promise
+stmt.reset().then(stmt => {
+  console.log(stmt)
+})
+/*
+// stmt {Statement}
+*/
+```
+
+---
+
+#### [Statement.finalize](#statementfinalize)
+
+`async` `finalize ()` `→` `{Promise<Statement>}`
+
+Perform a query
+
+**Returns:**
+
+- `{Promise<Statement>}`:
+
+```javascript
+// async/await
+const result = await stmt.finalize()
+// promise
+stmt.finalize().then(stmt => {
   console.log(stmt)
 })
 /*
