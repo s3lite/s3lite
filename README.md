@@ -1,4 +1,4 @@
-# S3Lite → SQLite + S3
+# ![S3Lite → SQLite + S3](https://avatars0.githubusercontent.com/u/60323596?s=36&v=4 "S3Lite → SQLite + S3") S3Lite → SQLite + S3
 
 [![Build Status](https://img.shields.io/travis/com/s3lite/s3lite)](https://travis-ci.com/s3lite/s3lite)
 [![Code Coverage](https://img.shields.io/coveralls/github/s3lite/s3lite)](https://coveralls.io/github/s3lite/s3lite)
@@ -17,18 +17,18 @@ A wrapper library for SQLite that keeps database file on Amazon S3 storage and a
   - [S3Lite](#s3lite)
     - [S3Lite.database(s3FileName, [options])](#s3lite-database)
   - [Database](#database)
-    - [Database.all(sql, [param, ...])](#database.all)
-    - [Database.get(sql, [param, ...])](#database.get)
-    - [Database.exec(sql)](#database.exec)
-    - [Database.run(sql, [param, ...])](#database.run)
-    - [Database.prepare(sql, [param, ...])](#database.prepare)
-    - [Database.close()](#database.close)
+    - [Database.all(sql, [param, ...])](#databaseall)
+    - [Database.get(sql, [param, ...])](#databaseget)
+    - [Database.exec(sql)](#databaseexec)
+    - [Database.run(sql, [param, ...])](#databaserun)
+    - [Database.prepare(sql, [param, ...])](#databaseprepare)
+    - [Database.close()](#databaseclose)
   - [Statement](#statement)
-    - [Statement.all([param, ...])](#statement.all)
-    - [Statement.get([param, ...])](#statement.get)
-    - [Statement.run([param, ...])](#statement.run)
-    - [Statement.reset()](#statement.reset)
-    - [Statement.finalize()](#statement.finalize)
+    - [Statement.all([param, ...])](#statementall)
+    - [Statement.get([param, ...])](#statementget)
+    - [Statement.run([param, ...])](#statementrun)
+    - [Statement.reset()](#statementreset)
+    - [Statement.finalize()](#statementfinalize)
 
 ## Usage
 
@@ -55,7 +55,7 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 
 ### Database
 
-#### Database.all
+#### [Database.all](#databaseall)
 
 `async` `all (sql, [params...])` `→` `{Promise<Array>}`
 
@@ -87,7 +87,7 @@ db.all('SELECT id, name FROM table LIMIT 10').then(data => {
 
 ---
 
-#### Database.get
+#### [Database.get](#databaseget)
 
 `async` `get (sql, [params...])` `→` `{Promise<Object>}`
 
@@ -116,7 +116,7 @@ db.all('SELECT id, name FROM table').then(data => {
 
 ---
 
-#### Database.exec
+#### [Database.exec](#databaseexec)
 
 `async` `exec (sql)` `→` `{Promise<Database>}`
 
@@ -147,7 +147,7 @@ db.exec(
 
 ---
 
-#### Database.run
+#### [Database.run](#databaserun)
 
 `async` `run (sql, [params...])` `→` `{Promise<{lastID: number, changes: number, sql: string}>}`
 
