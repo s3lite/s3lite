@@ -84,29 +84,36 @@ Minimal AWS S3 Policy to library works:
 
 ## API Documentation
 
+> Since this library is using node-sqlite3 under the hood all information about parameters in the specified methods can be found [here](https://github.com/mapbox/node-sqlite3/wiki/API).
+
 ### S3Lite
 
 #### [S3Lite.database](#s3litedatabase)
 
 `static` `database (s3FileName, [options])` `→` `{Database}`
 
-Init Database object
+Init Database object. It **doesn't** fetch database file or open SQLite connection. Database object is in lazy mode, it means during first query it will fetch the database file and open connection to SQLite.<br>
+If you need to open database before executing the sql query use the `db.open()` method. 
 
 **Parameters:**
 
-- `{string} s3FileName`: Filename
+- `{string} s3FileName` Access url to a database on s3 bucket.<br>
+Supports three different access url styles:
+    1. Virtual Hosted Style Access: `https://bucket.s3.region.amazonaws.com/key`
+    2. Path-Style Access: `https://s3.region.amazonaws.com/bucket-name/key`
+    3. Aws-Cli Style Access: `s3://bucket-name/key` As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.
 - `{Object} [options]` _(optional)_:
-  - `{string} [options.localFilePath]`
-  - `{Object} [options.s3Options]`
-  - `{number} [options.acquireLockRetryTimeout]`
-  - `{number} [options.remoteDatabaseCacheTime]`
-  - `{number} [options.maxRetryOnRemoteDatabaseUpdated]`
-  - `{number} [options.maxLockLifetime]`
-  - `{number} [options.minLockLifetime]`
+  - `{string} [options.localFilePath]` _(default: `/tmp/s3lite`)_<br>This is directory where downloaded database form s3 has been saved.
+  - `{Object} [options.s3Options]` _(default: `{}`)_<br>Object passed to `AWS.S3` constructor. For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
+  - `{number} [options.acquireLockRetryTimeout]` _(default: `100`ms)_<br>Timeout in milliseconds to wait before retrying acquire lock again  
+  - `{number} [options.remoteDatabaseCacheTime]` _(default: `1000`ms)_<br>Timeout in milliseconds to wait before checking database update on s3 bucket
+  - `{number} [options.maxRetryOnRemoteDatabaseUpdated]` _(default: `1`)_<br>Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations)
+  - `{number} [options.maxLockLifetime]` _(default: `60000`ms)_<br>Maximum lock lifetime on s3 bucket
+  - `{number} [options.minLockLifetime]` _(default: `1000`ms)_<br>Minimum lock lifetime on s3 bucket
 
 **Returns:**
 
-- `{Database}`:
+- `{Database}`: Database object
 
 ```javascript
 const db = S3Lite.database(
@@ -128,22 +135,23 @@ const db = S3Lite.database(
 
 `async` `all (sql, [params...])` `→` `{Promise<Array>}`
 
-Perform a query
+Runs the sql query with the specified parameters and returns `Promise` of `Array` if the query has been executed successfully.<br>
+If no data found, empty array has been resolved by the promise. 
 
 **Parameters:**
 
-- `{string} sql`: The SQL query to run.
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
-- `{Promise<Array>}`:
+- `{Promise<Array>}`: If the query has been executed successfully method returns `Promise` of `Array` of objects.
 
 ```javascript
 // async/await
-const data = await db.all('SELECT id, name FROM table LIMIT 10')
+const data = await db.all('SELECT id, name FROM table LIMIT ?', 10)
 // promise
-db.all('SELECT id, name FROM table LIMIT 10').then(data => {
+db.all('SELECT id, name FROM table LIMIT $a', { $a: 10 }).then(data => {
   console.log(data)
 })
 /*
@@ -160,16 +168,17 @@ db.all('SELECT id, name FROM table LIMIT 10').then(data => {
 
 `async` `get (sql, [params...])` `→` `{Promise<Object>}`
 
-Perform a query
+Runs the sql query with the specified parameters and returns `Promise` of `Object` if the query has been executed successfully.<br>
+If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
 
-- `{string} sql`: The SQL query to run.
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
-- `{Promise<Object|undefined>}`:
+- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or  `undefined` if nothing found.
 
 ```javascript
 // async/await
@@ -189,15 +198,15 @@ db.get('SELECT id, name FROM table').then(data => {
 
 `async` `exec (sql)` `→` `{Promise<Database>}`
 
-Perform a query
+Run all the sql queries. No results have been returned here.
 
 **Parameters:**
 
-- `{string} sql`: The SQL query to run.
+- `{string} sql`: Sql queries to run.
 
 **Returns:**
 
-- `{Promise<Database>}`: Database object
+- `{Promise<Database>}`: If the query has been executed successfully method returns `Promise` of `Database` object.
 
 ```javascript
 // async/await
@@ -209,8 +218,8 @@ await db.exec(`
 // promise
 db.exec(
   'CREATE TABLE test(id INTEGER PRIMARY KEY, name TEXT, control INTEGER)'
-).then(databaseObject => {
-  // databaseObject {Database}
+).then(() => {
+  // success
 })
 ```
 
@@ -220,16 +229,19 @@ db.exec(
 
 `async` `run (sql, [params...])` `→` `{Promise<{lastID: number, changes: number, sql: string}>}`
 
-Perform a query
+Runs the sql query with the specified parameters and returns `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
-- `{string} sql`: The SQL query to run.
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
-- `{Promise<{lastID: number, changes: number, sql: string}>}`:
+- `{Promise<{lastID: number, changes: number, sql: string}>}`: If the query has been executed successfully method returns `Promise` of `Object`:
+    - `lastId`: id of the last inserted row
+    - `changes`: number of changes done by the sql query
+    - `sql`: executed sql query
 
 ```javascript
 // async/await
@@ -253,8 +265,8 @@ Prepare a statement
 
 **Parameters:**
 
-- `{string} sql`: The SQL query to run.
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
@@ -277,19 +289,20 @@ db.prepare("INSERT INTO test VALUES(NULL, ?, ?)").then(stmt => {
 
 `async` `all ([params...])` `→` `{Promise<Array>}`
 
-Perform a query
+Execute the statement with the specified parameters and returns `Promise` of `Array` if the query has been executed successfully.<br>
+If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
-- `{Promise<Array>}`:
+- `{Promise<Array>}`: If the query has been executed successfully method returns `Promise` of `Array` of objects.
 
 ```javascript
 // async/await
-const data = await stmt.all()
+const data = await stmt.all(1, 2, 3)
 // promise
 stmt.all().then(data => {
   console.log(data)
@@ -308,19 +321,20 @@ stmt.all().then(data => {
 
 `async` `get ([params...])` `→` `{Promise<Object>}`
 
-Perform a query
+Execute the statement with the specified parameters and returns `Promise` of `Object` if the query has been executed successfully.<br>
+If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
-- `{Promise<Object|undefined>}`:
+- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or  `undefined` if nothing found.
 
 ```javascript
 // async/await
-const data = await stmt.get()
+const data = await stmt.get(3)
 // promise
 stmt.get().then(data => {
   console.log(data)
@@ -336,11 +350,11 @@ stmt.get().then(data => {
 
 `async` `run ([params...])` `→` `{Promise<Statement>}`
 
-Perform a query
+Execute the statement with the specified parameters and returns `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_:
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
 
 **Returns:**
 
@@ -364,7 +378,7 @@ stmt.run('foo').then(stmt => {
 
 `async` `reset ()` `→` `{Promise<Statement>}`
 
-Perform a query
+Reset the statement
 
 **Returns:**
 
@@ -388,7 +402,7 @@ stmt.reset().then(stmt => {
 
 `async` `finalize ()` `→` `{Promise<Statement>}`
 
-Perform a query
+Finalize the statement
 
 **Returns:**
 
