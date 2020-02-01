@@ -1,6 +1,5 @@
 # [![S3Lite → SQLite + S3](https://avatars0.githubusercontent.com/u/60323596?s=36&v=4)](https://github.com/s3lite/s3lite) S3Lite → SQLite + S3
 
-
 [![Build Status](https://img.shields.io/travis/com/s3lite/s3lite)](https://travis-ci.com/s3lite/s3lite)
 [![Code Coverage](https://img.shields.io/coveralls/github/s3lite/s3lite)](https://coveralls.io/github/s3lite/s3lite)
 [![Node Version](https://img.shields.io/node/v/s3lite)](https://www.npmjs.com/package/s3lite)
@@ -55,9 +54,8 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 
 ## How It Works
 
-How it works
-
 Minimal AWS S3 Policy to library works:
+
 ```json
 {
   "Id": "S3LitePolicyId",
@@ -65,18 +63,14 @@ Minimal AWS S3 Policy to library works:
   "Statement": [
     {
       "Sid": "S3LiteStatementPolicyId",
-      "Action": [
-        "s3:DeleteObject",
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
+      "Action": ["s3:DeleteObject", "s3:GetObject", "s3:PutObject"],
       "Effect": "Allow",
       "Resource": [
         "arn:aws:s3:::bucket-name/database.sqlite",
         "arn:aws:s3:::bucket-name/database.sqlite.lock"
       ],
       "Principal": {
-        
+        "Your": "Principal ARN"
       }
     }
   ]
@@ -94,27 +88,28 @@ Minimal AWS S3 Policy to library works:
 `static` `database (s3FileName, [options])` `→` `{Database}`
 
 Init Database object. It **doesn't** fetch database file or open SQLite connection. Database object is in lazy mode, it means during first query it will fetch the database file and open connection to SQLite.<br>
-If you need to open database before executing the sql query use the `db.open()` method. 
+If you need to open database before executing the sql query use the `db.open()` method.
 
 **Parameters:**
 
 - `{string} s3FileName` Access url to a database on s3 bucket.<br>
-Supports three different access url styles:
+  Supports three different access url styles:
   - Virtual Hosted Style Access: `https://bucket.s3.region.amazonaws.com/key`
   - Path-Style Access: `https://s3.region.amazonaws.com/bucket-name/key`
   - Aws-Cli Style Access: `s3://bucket-name/key`<br>
-  As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.
+    As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.<br>
+    For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
 - `{Object} [options]` _(optional)_:
 
-| Type | Name | _Default_ | Description |
-| --- | --- | --- | --- |
-| `{string}` | `localFilePath` | `/tmp/s3lite` | This is directory where downloaded database form s3 has been saved. |
-| `{Object}` | `s3Options` | `{}` | Object passed to `AWS.S3` constructor. For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
-| `{number}` | `acquireLockRetryTimeout` | `100`ms | Timeout in milliseconds to wait before retrying acquire lock again. |
-| `{number}` | `remoteDatabaseCacheTime` | `1000`ms | Timeout in milliseconds to wait before checking database update on s3 bucket. |
-| `{number}` | `maxRetryOnRemoteDatabaseUpdated` | `1` | Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations). |
-| `{number}` | `maxLockLifetime` | `60000`ms | Maximum lock lifetime on s3 bucket. |
-| `{number}` | `minLockLifetime` | `1000`ms | Minimum lock lifetime on s3 bucket. |
+| Type       | Name                              | _Default_     | Description                                                                                                                               |
+| ---------- | --------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `{string}` | `localFilePath`                   | `/tmp/s3lite` | This is directory where downloaded database form s3 has been saved.                                                                       |
+| `{Object}` | `s3Options`                       | `{}`          | Object passed to `AWS.S3` constructor.                                                                                                    |
+| `{number}` | `acquireLockRetryTimeout`         | `100`ms       | Timeout in milliseconds to wait before retrying acquire lock again.                                                                       |
+| `{number}` | `remoteDatabaseCacheTime`         | `1000`ms      | Timeout in milliseconds to wait before checking database update on s3 bucket.                                                             |
+| `{number}` | `maxRetryOnRemoteDatabaseUpdated` | `1`           | Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations). |
+| `{number}` | `maxLockLifetime`                 | `60000`ms     | Maximum lock lifetime on s3 bucket.                                                                                                       |
+| `{number}` | `minLockLifetime`                 | `1000`ms      | Minimum lock lifetime on s3 bucket.                                                                                                       |
 
 **Returns:**
 
@@ -143,7 +138,7 @@ const db = S3Lite.database(
 `async` `all (sql, [params...])` `→` `{Promise<Array>}`
 
 Runs the sql query with the specified parameters and returns `Promise` of `Array` if the query has been executed successfully.<br>
-If no data found, empty array has been resolved by the promise. 
+If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
 
@@ -185,7 +180,7 @@ If no data found, `undefined` has been resolved by the promise.
 
 **Returns:**
 
-- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or  `undefined` if nothing found.
+- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or `undefined` if nothing found.
 
 ```javascript
 // async/await
@@ -246,9 +241,9 @@ Runs the sql query with the specified parameters and returns `Promise` of `Objec
 **Returns:**
 
 - `{Promise<{lastID: number, changes: number, sql: string}>}`: If the query has been executed successfully method returns `Promise` of `Object`:
-    - `lastId`: id of the last inserted row
-    - `changes`: number of changes done by the sql query
-    - `sql`: executed sql query
+  - `lastId`: id of the last inserted row
+  - `changes`: number of changes done by the sql query
+  - `sql`: executed sql query
 
 ```javascript
 // async/await
@@ -281,9 +276,9 @@ Prepare a statement
 
 ```javascript
 // async/await
-const stmt = await db.prepare("INSERT INTO test VALUES(NULL, ?, ?)")
+const stmt = await db.prepare('INSERT INTO test VALUES(NULL, ?, ?)')
 // promise
-db.prepare("INSERT INTO test VALUES(NULL, ?, ?)").then(stmt => {
+db.prepare('INSERT INTO test VALUES(NULL, ?, ?)').then(stmt => {
   // stmt {Statement}
 })
 ```
@@ -336,13 +331,10 @@ db.close().then(() => {
 
 Statement object created by `db.prepare()` method.<br>
 It contains three properties:
+
 - `lastId`: id of the last inserted row
 - `changes`: number of changes done by the sql query
 - `sql`: executed sql query
-
-```json
-
-```
 
 #### [Statement.all](#statementall)
 
@@ -392,7 +384,7 @@ If no data found, `undefined` has been resolved by the promise.
 
 **Returns:**
 
-- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or  `undefined` if nothing found.
+- `{Promise<Object|undefined>}`: If the query has been executed successfully method returns `Promise` of `Object` or `undefined` if nothing found.
 
 ```javascript
 // async/await
@@ -474,7 +466,7 @@ Finalize the statement
 
 **Returns:**
 
-- `{Promise<Statement>}`:  Statement object (self)
+- `{Promise<Statement>}`: Statement object (self)
 
 ```javascript
 // async/await

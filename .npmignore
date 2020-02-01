@@ -1,0 +1,7 @@
+coverage
+package-lock.json
+.idea
+.editorconfig
+.travis.yml
+tests
+

@@ -1,11 +1,8 @@
 logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
 coverage
 .nyc_output
-node_modules/
+node_modules
 package-lock.json
 .idea
