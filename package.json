@@ -1,7 +1,7 @@
 {
   "name": "s3lite",
-  "description": "SQLite client for Node.js with database storage on aws s3 bucket",
-  "version": "0.0.2",
+  "description": "A wrapper library for SQLite that keeps database file on Amazon S3 storage and adds support for promises and async/await.",
+  "version": "0.0.3",
   "repository": "s3lite/s3lite",
   "author": "Artur FanFataL Grzybowski <artur@fanfatal.pl> (https://www.fanfatal.pl)",
   "keywords": [
