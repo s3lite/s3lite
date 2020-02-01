@@ -3,8 +3,10 @@ const Database = require('../src/database')
 const exec = jest.fn()
 const prepare = jest.fn()
 const close = jest.fn()
+const open = jest.fn()
 const executor = {
   exec,
+  open,
   close,
   prepare
 }
@@ -18,6 +20,7 @@ describe('Database', () => {
       .mockReset()
       .mockImplementation(() => Promise.resolve({ instance: {} }))
     close.mockReset().mockImplementation(() => Promise.resolve())
+    open.mockReset().mockImplementation(() => Promise.resolve())
     sql = 'SELECT * FROM test'
   })
 
@@ -183,6 +186,15 @@ describe('Database', () => {
         lastID: undefined,
         changes: undefined
       })
+    })
+  })
+
+  describe('Database.open', () => {
+    test('should call executor open method', async () => {
+      const db = new Database({ executor })
+      await db.open()
+
+      expect(open).toBeCalled()
     })
   })
 

@@ -59,5 +59,11 @@ module.exports = function ({ executor }) {
    */
   Database.close = () => executor.close().then(() => Database)
 
+  /**
+   * @return {Promise<Database>}
+   * @async
+   */
+  Database.open = () => executor.open().then(() => Database)
+
   return Database
 }

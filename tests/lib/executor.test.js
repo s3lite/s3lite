@@ -10,6 +10,7 @@ const releaseLock = jest.fn()
 const pullDatabase = jest.fn()
 const pushDatabase = jest.fn()
 const prepare = jest.fn()
+const open = jest.fn()
 const close = jest.fn()
 const exec = jest.fn()
 const run = jest.fn()
@@ -605,11 +606,12 @@ describe('Executor', () => {
       expect(close.mock.calls.length).toBe(1)
     })
 
-    test('should not call close method when sqlite instance is not initiated', async () => {
+    test('should open database when sqlite instance is not initiated', async () => {
       const executor = new Executor({ s3 })
       await expect(executor.close()).resolves.toBeUndefined()
 
-      expect(close.mock.calls.length).toBe(0)
+      expect(Database.mock.calls.length).toBe(1)
+      expect(close.mock.calls.length).toBe(1)
     })
 
     test('should rethrow error from close method in sqlite instance', async () => {
@@ -619,6 +621,23 @@ describe('Executor', () => {
       await executor.exec({ method: 'run', sql: 'SELECT * FROM test' })
 
       await expect(executor.close()).rejects.toThrow('close error')
+    })
+  })
+
+  describe('Executor.open', () => {
+    test('should open database when sqlite instance is not initiated', async () => {
+      const executor = new Executor({ s3 })
+      await expect(executor.open()).resolves.toBeUndefined()
+
+      expect(Database.mock.calls.length).toBe(1)
+    })
+
+    test('should rethrow error from close method in sqlite instance', async () => {
+      Database.mockImplementationOnce((file, fn) => fn(new Error('open error')))
+
+      const executor = new Executor({ s3 })
+
+      await expect(executor.open()).rejects.toThrow('open error')
     })
   })
 })

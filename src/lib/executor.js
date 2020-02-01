@@ -91,15 +91,23 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
     })
   }
 
+  Executor.open = () => {
+    const queueGroup = now() + Math.random()
+    return queue.enqueue(queueGroup, () => openDatabase())
+  }
+
   Executor.close = () => {
-    return queue.enqueue(
-      now(),
+    const queueGroup = now() + Math.random()
+    const promises = []
+    if (!sqliteInstance) {
+      promises.push(queue.enqueue(queueGroup, () => openDatabase()))
+    }
+    const result = queue.enqueue(
+      queueGroup,
       () =>
         new Promise((resolve, reject) => {
-          if (!sqliteInstance) {
-            return resolve()
-          }
           sqliteInstance.close(error => {
+            sqliteInstance = null
             if (error) {
               reject(error)
             } else {
@@ -108,10 +116,12 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
           })
         })
     )
+    promises.push(result)
+    return Promise.all(promises).then(() => result)
   }
 
   Executor.prepare = ({ sql, params }) => {
-    const queueGroup = now()
+    const queueGroup = now() + Math.random()
     const promises = []
     if (!sqliteInstance) {
       promises.push(queue.enqueue(queueGroup, () => openDatabase()))
@@ -146,7 +156,7 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
       (!Array.isArray(params[0]) && typeof params[0] !== 'object')
         ? params
         : params[0]
-    const queueGroup = now()
+    const queueGroup = now() + Math.random()
     const promises = []
 
     if (!insideTransaction) {

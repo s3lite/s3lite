@@ -23,6 +23,7 @@ A wrapper library for SQLite that keeps database file on Amazon S3 storage and a
     - [Database.exec(sql)](#databaseexec)
     - [Database.run(sql, [param, ...])](#databaserun)
     - [Database.prepare(sql, [param, ...])](#databaseprepare)
+    - [Database.open()](#databaseopen)
     - [Database.close()](#databaseclose)
   - [Statement](#statement)
     - [Statement.all([param, ...])](#statementall)
@@ -99,17 +100,21 @@ If you need to open database before executing the sql query use the `db.open()` 
 
 - `{string} s3FileName` Access url to a database on s3 bucket.<br>
 Supports three different access url styles:
-    1. Virtual Hosted Style Access: `https://bucket.s3.region.amazonaws.com/key`
-    2. Path-Style Access: `https://s3.region.amazonaws.com/bucket-name/key`
-    3. Aws-Cli Style Access: `s3://bucket-name/key` As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.
+  - Virtual Hosted Style Access: `https://bucket.s3.region.amazonaws.com/key`
+  - Path-Style Access: `https://s3.region.amazonaws.com/bucket-name/key`
+  - Aws-Cli Style Access: `s3://bucket-name/key`<br>
+  As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.
 - `{Object} [options]` _(optional)_:
-  - `{string} [options.localFilePath]` _(default: `/tmp/s3lite`)_<br>This is directory where downloaded database form s3 has been saved.
-  - `{Object} [options.s3Options]` _(default: `{}`)_<br>Object passed to `AWS.S3` constructor. For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
-  - `{number} [options.acquireLockRetryTimeout]` _(default: `100`ms)_<br>Timeout in milliseconds to wait before retrying acquire lock again  
-  - `{number} [options.remoteDatabaseCacheTime]` _(default: `1000`ms)_<br>Timeout in milliseconds to wait before checking database update on s3 bucket
-  - `{number} [options.maxRetryOnRemoteDatabaseUpdated]` _(default: `1`)_<br>Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations)
-  - `{number} [options.maxLockLifetime]` _(default: `60000`ms)_<br>Maximum lock lifetime on s3 bucket
-  - `{number} [options.minLockLifetime]` _(default: `1000`ms)_<br>Minimum lock lifetime on s3 bucket
+
+| Type | Name | _Default_ | Description |
+| --- | --- | --- | --- |
+| `{string}` | `localFilePath` | `/tmp/s3lite` | This is directory where downloaded database form s3 has been saved. |
+| `{Object}` | `s3Options` | `{}` | Object passed to `AWS.S3` constructor. For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
+| `{number}` | `acquireLockRetryTimeout` | `100`ms | Timeout in milliseconds to wait before retrying acquire lock again. |
+| `{number}` | `remoteDatabaseCacheTime` | `1000`ms | Timeout in milliseconds to wait before checking database update on s3 bucket. |
+| `{number}` | `maxRetryOnRemoteDatabaseUpdated` | `1` | Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations). |
+| `{number}` | `maxLockLifetime` | `60000`ms | Maximum lock lifetime on s3 bucket. |
+| `{number}` | `minLockLifetime` | `1000`ms | Minimum lock lifetime on s3 bucket. |
 
 **Returns:**
 
@@ -119,6 +124,8 @@ Supports three different access url styles:
 const db = S3Lite.database(
   'https://bucket-name.s3.eu-central-1.amazonaws.com/database.sqlite',
   {
+    localFilePath: '/tmp',
+    maxRetryOnRemoteDatabaseUpdated: 0,
     s3Options: {
       accessKeyId: 'AWS_ACCESS_KEY_ID',
       secretAccessKey: 'AWS_SECRET_ACCESS_KEY'
@@ -270,7 +277,7 @@ Prepare a statement
 
 **Returns:**
 
-- `{Promise<Statement>}`:
+- `{Promise<Statement>}`: Statement object (self)
 
 ```javascript
 // async/await
@@ -283,7 +290,59 @@ db.prepare("INSERT INTO test VALUES(NULL, ?, ?)").then(stmt => {
 
 ---
 
+#### [Database.open](#databaseopen)
+
+`async` `open ()` `→` `{Promise<Database>}`
+
+Open the database, fetch database file from s3 bucket and open the SQLite connection.
+
+**Returns:**
+
+- `{Promise<Database>}`: Database object
+
+```javascript
+// async/await
+await db.open()
+// promise
+db.open().then(() => {
+  // database opened
+})
+```
+
+---
+
+#### [Database.close](#databaseclose)
+
+`async` `close ()` `→` `{Promise<Database>}`
+
+Close the SQLite connection
+
+**Returns:**
+
+- `{Promise<Database>}`: Database object
+
+```javascript
+// async/await
+await db.close()
+// promise
+db.close().then(() => {
+  // database closed
+})
+```
+
+---
+
 ### Statement
+
+Statement object created by `db.prepare()` method.<br>
+It contains three properties:
+- `lastId`: id of the last inserted row
+- `changes`: number of changes done by the sql query
+- `sql`: executed sql query
+
+```json
+
+```
 
 #### [Statement.all](#statementall)
 
@@ -302,10 +361,13 @@ If no data found, empty array has been resolved by the promise.
 
 ```javascript
 // async/await
-const data = await stmt.all(1, 2, 3)
+const stmt = await db.prepare('SELECT * FROM test WHERE column = ? LIMIT ?')
+const data = await stmt.all(1, 5)
 // promise
-stmt.all().then(data => {
-  console.log(data)
+db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
+  stmt.all().then(data => {
+    console.log(data)
+  })
 })
 /*
 [
@@ -334,10 +396,13 @@ If no data found, `undefined` has been resolved by the promise.
 
 ```javascript
 // async/await
+const stmt = await db.prepare('SELECT * FROM test WHERE column = ? LIMIT 1')
 const data = await stmt.get(3)
 // promise
-stmt.get().then(data => {
-  console.log(data)
+db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
+  stmt.get(3).then(data => {
+    console.log(data)
+  })
 })
 /*
 { id: 1, name: 'test1' }
@@ -358,14 +423,17 @@ Execute the statement with the specified parameters and returns `Promise` of `Ob
 
 **Returns:**
 
-- `{Promise<Statement>}`:
+- `{Promise<Statement>}`: Statement object (self)
 
 ```javascript
 // async/await
-const result = await stmt.run('foo')
+const stmt = await db.prepare('INSERT INTO test VALUES (NULL, ?)')
+await stmt.run('foo')
 // promise
-stmt.run('foo').then(stmt => {
-  console.log(stmt)
+db.prepare('INSERT INTO test VALUES (NULL, ?)').then(stmt => {
+  stmt.run('foo').then(stmt => {
+    console.log(stmt)
+  })
 })
 /*
 // stmt {Statement}
@@ -378,11 +446,11 @@ stmt.run('foo').then(stmt => {
 
 `async` `reset ()` `→` `{Promise<Statement>}`
 
-Reset the statement
+Reset the cursor of the statement. It's require for re-execute the query with the same params.
 
 **Returns:**
 
-- `{Promise<Statement>}`:
+- `{Promise<Statement>}`: Statement object (self)
 
 ```javascript
 // async/await
@@ -406,7 +474,7 @@ Finalize the statement
 
 **Returns:**
 
-- `{Promise<Statement>}`:
+- `{Promise<Statement>}`:  Statement object (self)
 
 ```javascript
 // async/await
