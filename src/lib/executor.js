@@ -178,8 +178,9 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
       : queue.enqueue(queueGroup, () => executeSql({ method, sql, params }))
     promises.push(result)
 
+    const isCommitQuery = isCommit(sql)
     if (!isSelect(sql)) {
-      if (!insideTransaction || isCommit(sql)) {
+      if (!insideTransaction || isCommitQuery) {
         promises.push(queue.enqueue(queueGroup, () => s3.pushDatabase()))
         promises.push(queue.enqueue(queueGroup, () => s3.releaseLock()))
         insideTransaction = false
@@ -193,7 +194,7 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
       .then(() => result)
       .catch(error => {
         if (error instanceof S3RemoteDatabaseUpdatedError) {
-          if (counter >= maxRetryOnRemoteDatabaseUpdated) {
+          if (isCommitQuery || counter >= maxRetryOnRemoteDatabaseUpdated) {
             throw error
           }
           return Executor.exec({
