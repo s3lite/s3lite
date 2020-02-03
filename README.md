@@ -9,28 +9,6 @@
 
 A wrapper library for SQLite that keeps database file on Amazon S3 storage and adds support for promises and async/await.
 
-## Table of contents
-
-- [Usage](#usage)
-- [How It Works](#how-it-works)
-- [API Documentation](#api-documentation)
-  - [S3Lite](#s3lite)
-    - [S3Lite.database(s3FileName, [options])](#s3litedatabase)
-  - [Database](#database)
-    - [Database.all(sql, [param, ...])](#databaseall)
-    - [Database.get(sql, [param, ...])](#databaseget)
-    - [Database.exec(sql)](#databaseexec)
-    - [Database.run(sql, [param, ...])](#databaserun)
-    - [Database.prepare(sql, [param, ...])](#databaseprepare)
-    - [Database.open()](#databaseopen)
-    - [Database.close()](#databaseclose)
-  - [Statement](#statement)
-    - [Statement.all([param, ...])](#statementall)
-    - [Statement.get([param, ...])](#statementget)
-    - [Statement.run([param, ...])](#statementrun)
-    - [Statement.reset()](#statementreset)
-    - [Statement.finalize()](#statementfinalize)
-
 ## Usage
 
 ```
@@ -52,7 +30,36 @@ const db = S3Lite.database(
 const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 ```
 
+## Table of contents
+
+- [How It Works](#how-it-works)
+- [API Documentation](#api-documentation)
+  - [S3Lite](#s3lite)
+    - [S3Lite.database(s3FileName, [options])](#s3litedatabase)
+  - [Database](#database)
+    - [Database.all(sql, [param, ...])](#databaseall)
+    - [Database.get(sql, [param, ...])](#databaseget)
+    - [Database.exec(sql)](#databaseexec)
+    - [Database.run(sql, [param, ...])](#databaserun)
+    - [Database.prepare(sql, [param, ...])](#databaseprepare)
+    - [Database.open()](#databaseopen)
+    - [Database.close()](#databaseclose)
+  - [Statement](#statement)
+    - [Statement.all([param, ...])](#statementall)
+    - [Statement.get([param, ...])](#statementget)
+    - [Statement.run([param, ...])](#statementrun)
+    - [Statement.reset()](#statementreset)
+    - [Statement.finalize()](#statementfinalize)
+
 ## How It Works
+
+<details><summary>Architecture diagram</summary>
+<p>
+
+[![Architecture diagram](https://raw.githubusercontent.com/s3lite/s3lite/master/diagrams/s3lite-diagram.png)](https://github.com/s3lite/s3lite)
+
+</p>
+</details>
 
 Minimal AWS S3 Policy to library works:
 
