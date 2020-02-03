@@ -53,10 +53,9 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 
 ## How It Works
 
-To execute select-like sql query S3Lite pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query and return result on success.<br>
-To execute non-select-like sql query S3Lite acquire lock on s3 bucket, then pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query. After successful executing query S3Lite push the database to S3 bucket and release lock. Then return result.
-
-<details><summary>For details look on the architecture diagram:</summary>
+* To execute select-like sql query S3Lite pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query and return result on success.<br>
+* To execute non-select-like sql query S3Lite acquire lock on s3 bucket, then pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query. After successful executing query S3Lite push the database to S3 bucket and release lock, then return result.
+* <details><summary>For details look on the architecture diagram:</summary>
 <p>
 
 [![Architecture diagram](https://raw.githubusercontent.com/s3lite/s3lite/master/diagrams/s3lite-diagram.png)](https://github.com/s3lite/s3lite)
