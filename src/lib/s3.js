@@ -2,7 +2,7 @@ const AWS = require('aws-sdk')
 const md5 = require('md5')
 const LockFile = require('./lockFile')
 const { now, wait, getFile, saveToFile, getLocalFileName } = require('./utils')
-const { S3RemoteDatabaseUpdatedError } = require('./errors')
+const { S3LiteError } = require('./errors')
 
 module.exports = function ({
   bucket,
@@ -12,6 +12,7 @@ module.exports = function ({
   remoteDatabaseCacheTime,
   minLockLifetime,
   maxLockLifetime,
+  allowNotFound,
   s3Options
 }) {
   const S3 = {}
@@ -79,9 +80,9 @@ module.exports = function ({
             Key: lockName
           })
           .promise()
-          .catch(e => Promise.resolve())
+          .catch(() => Promise.resolve())
       })
-      .catch(e => Promise.resolve())
+      .catch(() => Promise.resolve())
   }
 
   S3.pullDatabase = (useCache = true) => {
@@ -111,9 +112,14 @@ module.exports = function ({
         })
       })
       .catch(error => {
-        if ([304, 404].includes(error.statusCode)) {
+        if (fileLastCheck && error.statusCode === 304) {
           return Promise.resolve(localFile)
         }
+        if (error.statusCode === 404) {
+          if (!allowNotFound) throw error
+          return saveToFile(localFile, '').then(() => localFile)
+        }
+        fileLastCheck = now()
         throw error
       })
   }
@@ -131,9 +137,7 @@ module.exports = function ({
         .promise()
         .then(data => {
           if (data.ETag !== bodyMD5) {
-            throw new S3RemoteDatabaseUpdatedError(
-              'ETag different from ContentMD5'
-            )
+            throw new S3LiteError('ETag different from ContentMD5')
           }
           lockFile.saveTime('pushDatabase', startTime)
           databaseETag = data.ETag

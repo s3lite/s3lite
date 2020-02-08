@@ -1,7 +1,6 @@
 jest.mock('sqlite3')
 
 const sqlite3 = require('sqlite3')
-const { S3RemoteDatabaseUpdatedError } = require('../../src/lib/errors')
 
 const Executor = require('../../src/lib/executor')
 
@@ -54,57 +53,6 @@ describe('Executor', () => {
         prepare,
         close
       }
-    })
-  })
-
-  describe('Executor.maxRetryOnRemoteDatabaseUpdated', () => {
-    test('should throw error without retry when maxRetryOnRemoteDatabaseUpdated is 0', async () => {
-      pushDatabase.mockImplementationOnce(() =>
-        Promise.reject(new S3RemoteDatabaseUpdatedError('is 0'))
-      )
-
-      const executor = new Executor({ s3, maxRetryOnRemoteDatabaseUpdated: 0 })
-      await expect(
-        executor.exec({ method: 'run', sql: 'UPDATE test SET name=1' })
-      ).rejects.toThrow('is 0')
-      expect(pullDatabase.mock.calls.length).toBe(1)
-      expect(run.mock.calls.length).toBe(1)
-    })
-
-    test('should throw error with two retries when maxRetryOnRemoteDatabaseUpdated is 2', async () => {
-      pushDatabase.mockImplementationOnce(() =>
-        Promise.reject(new S3RemoteDatabaseUpdatedError('is 0'))
-      )
-      pushDatabase.mockImplementationOnce(() =>
-        Promise.reject(new S3RemoteDatabaseUpdatedError('is 1'))
-      )
-      pushDatabase.mockImplementationOnce(() =>
-        Promise.reject(new S3RemoteDatabaseUpdatedError('is 2'))
-      )
-
-      const executor = new Executor({ s3, maxRetryOnRemoteDatabaseUpdated: 2 })
-      await expect(
-        executor.exec({ method: 'run', sql: 'UPDATE test SET name=1' })
-      ).rejects.toThrow('is 2')
-      expect(pullDatabase.mock.calls.length).toBe(3)
-      expect(run.mock.calls.length).toBe(3)
-    })
-
-    test('should not throw error when retry exec is successful', async () => {
-      pushDatabase.mockImplementationOnce(() =>
-        Promise.reject(new S3RemoteDatabaseUpdatedError('is 0'))
-      )
-
-      const executor = new Executor({ s3, maxRetryOnRemoteDatabaseUpdated: 1 })
-      await expect(
-        executor.exec({ method: 'exec', sql: 'UPDATE test SET name=1' })
-      ).resolves.toEqual({
-        instance: expect.anything(),
-        result: undefined,
-        sql: 'UPDATE test SET name=1'
-      })
-      expect(pullDatabase.mock.calls.length).toBe(2)
-      expect(exec.mock.calls.length).toBe(2)
     })
   })
 

@@ -28,7 +28,7 @@ Utils.now = now
 Utils.wait = wait
 
 const S3 = require('../../src/lib/s3')
-const { S3RemoteDatabaseUpdatedError } = require('../../src/lib/errors')
+const { S3LiteError } = require('../../src/lib/errors')
 
 describe('S3', () => {
   let s3Params
@@ -59,7 +59,9 @@ describe('S3', () => {
       saveTime
     }))
     getFile.mockClear().mockImplementation(() => Promise.resolve())
-    saveToFile.mockClear().mockImplementation(() => Promise.resolve())
+    saveToFile
+      .mockClear()
+      .mockImplementation(() => Promise.resolve('/tmp/database.sqlite'))
     wait.mockClear().mockImplementation(() => Promise.resolve())
     now.mockClear().mockReturnValue(1)
     s3Params = {
@@ -70,6 +72,7 @@ describe('S3', () => {
       remoteDatabaseCacheTime: 0,
       minLockLifetime: 100,
       maxLockLifetime: 10000,
+      allowNotFound: true,
       s3Options: {
         region: 'eu-west-1'
       }
@@ -168,6 +171,19 @@ describe('S3', () => {
       expect(saveTime).toBeCalledWith('pullDatabase', 1)
     })
 
+    test('should rethrow error when getObject throws a 404 error and allowNotFound flag is false', async () => {
+      getObject.mockReturnValueOnce(
+        Promise.reject({
+          statusCode: 404
+        })
+      )
+
+      const s3 = new S3({ ...s3Params, allowNotFound: false })
+      await expect(s3.pullDatabase()).rejects.toEqual({
+        statusCode: 404
+      })
+    })
+
     test('should properly resolve file database local name when getObject throws 404 error', async () => {
       getObject.mockReturnValueOnce(
         Promise.reject({
@@ -179,7 +195,13 @@ describe('S3', () => {
       await expect(s3.pullDatabase()).resolves.toEqual('/tmp/database.sqlite')
     })
 
-    test('should properly resolve file database local name when getObject throws 304 error', async () => {
+    test('should properly resolve file database local name when getObject throws 304 error for the second time', async () => {
+      getObject.mockReturnValueOnce(
+        Promise.resolve({
+          ETag: 'etag',
+          Body: 'body'
+        })
+      )
       getObject.mockReturnValueOnce(
         Promise.reject({
           statusCode: 304
@@ -187,7 +209,12 @@ describe('S3', () => {
       )
 
       const s3 = new S3(s3Params)
-      await expect(s3.pullDatabase()).resolves.toEqual('/tmp/database.sqlite')
+      await expect(s3.pullDatabase(false)).resolves.toEqual(
+        '/tmp/database.sqlite'
+      )
+      await expect(s3.pullDatabase(false)).resolves.toEqual(
+        '/tmp/database.sqlite'
+      )
     })
 
     test('should rethrow error when getObject throws different than 304 or 404 error', async () => {
@@ -232,7 +259,7 @@ describe('S3', () => {
       expect(saveTime).toBeCalledWith('pushDatabase', 1)
     })
 
-    test('should throw S3RemoteDatabaseUpdatedError when etag is different than md5 content', async () => {
+    test('should throw S3LiteError when etag is different than md5 content', async () => {
       putObject.mockReturnValueOnce(
         Promise.resolve({
           ETag: 'etag-different'
@@ -241,7 +268,7 @@ describe('S3', () => {
 
       const s3 = new S3(s3Params)
       await expect(s3.pushDatabase()).rejects.toThrow(
-        S3RemoteDatabaseUpdatedError,
+        S3LiteError,
         'ETag different from ContentMD5'
       )
     })

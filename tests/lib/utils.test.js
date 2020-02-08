@@ -1,3 +1,4 @@
+jest.mock('md5', () => jest.fn().mockReturnValue('md5'))
 jest.mock('fs')
 jest.mock('mkdirp', () =>
   jest.fn().mockImplementation((directory, fn) => fn(null))
@@ -112,12 +113,12 @@ describe('Utils', () => {
 
     test('should return proper path', () => {
       const result = Utils.getLocalFileName('/path', 'test.sqlite')
-      expect(result).toEqual('/path/test.sqlite')
+      expect(result).toEqual('/path/test.sqlite.md5')
     })
 
     test('should trim ending slashes', () => {
       const result = Utils.getLocalFileName('/path//', 'test.sqlite')
-      expect(result).toEqual('/path/test.sqlite')
+      expect(result).toEqual('/path/test.sqlite.md5')
     })
   })
 

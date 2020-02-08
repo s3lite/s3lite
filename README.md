@@ -53,8 +53,8 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 
 ## How It Works
 
-* To execute select-like sql query S3Lite pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query and return result on success.<br>
-* To execute non-select-like sql query S3Lite acquire lock on s3 bucket, then pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query. After successful executing query S3Lite push the database to S3 bucket and release lock, then return result.
+- To execute select-like sql query S3Lite pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query and return result on success.<br>
+- To execute non-select-like sql query S3Lite acquire lock on s3 bucket, then pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query. After successful executing query S3Lite push the database to S3 bucket and release lock, then return result.
 
 <details><summary>For details look on the architecture diagram:</summary>
 <p>
@@ -111,15 +111,15 @@ If you need to open database before executing the sql query use the `db.open()` 
     For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
 - `{Object} [options]` _(optional)_:
 
-| Type       | Name                              | _Default_     | Description                                                                                                                               |
-| ---------- | --------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `{string}` | `localFilePath`                   | `/tmp/s3lite` | This is directory where downloaded database form s3 has been saved.                                                                       |
-| `{Object}` | `s3Options`                       | `{}`          | Object passed to `AWS.S3` constructor.                                                                                                    |
-| `{number}` | `acquireLockRetryTimeout`         | `100`ms       | Timeout in milliseconds to wait before retrying acquire lock again.                                                                       |
-| `{number}` | `remoteDatabaseCacheTime`         | `1000`ms      | Timeout in milliseconds to wait before checking database update on s3 bucket.                                                             |
-| `{number}` | `maxRetryOnRemoteDatabaseUpdated` | `1`           | Number of retries to execute query in case database file on remote changes (its could happens because of bad lock timeouts calculations). |
-| `{number}` | `maxLockLifetime`                 | `60000`ms     | Maximum lock lifetime on s3 bucket.                                                                                                       |
-| `{number}` | `minLockLifetime`                 | `1000`ms      | Minimum lock lifetime on s3 bucket.                                                                                                       |
+| Type       | Name                      | _Default_                                         | Description                                                                                              |
+| ---------- | ------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `{string}` | `localFilePath`           | `/tmp/s3lite`                                     | This is directory where downloaded database form s3 has been saved.                                      |
+| `{number}` | `mode`                    | `S3Lite.OPEN_READWRITE &#124; S3Lite.OPEN_CREATE` | Mode to open the Sqlite. Combination of: S3Lite.OPEN_READONLY, S3Lite.OPEN_READWRITE, S3Lite.OPEN_CREATE |
+| `{Object}` | `s3Options`               | `{}`                                              | Object passed to `AWS.S3` constructor.                                                                   |
+| `{number}` | `acquireLockRetryTimeout` | `100`ms                                           | Timeout in milliseconds to wait before retrying acquire lock again.                                      |
+| `{number}` | `remoteDatabaseCacheTime` | `1000`ms                                          | Timeout in milliseconds to wait before checking database update on s3 bucket.                            |
+| `{number}` | `maxLockLifetime`         | `60000`ms                                         | Maximum lock lifetime on s3 bucket.                                                                      |
+| `{number}` | `minLockLifetime`         | `1000`ms                                          | Minimum lock lifetime on s3 bucket.                                                                      |
 
 **Returns:**
 
@@ -130,7 +130,6 @@ const db = S3Lite.database(
   'https://bucket-name.s3.eu-central-1.amazonaws.com/database.sqlite',
   {
     localFilePath: '/tmp',
-    maxRetryOnRemoteDatabaseUpdated: 0,
     s3Options: {
       accessKeyId: 'AWS_ACCESS_KEY_ID',
       secretAccessKey: 'AWS_SECRET_ACCESS_KEY'

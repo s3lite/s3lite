@@ -1,32 +1,38 @@
+const sqlite3 = require('sqlite3')
 const Database = require('./database')
 const S3 = require('./lib/s3')
 const Executor = require('./lib/executor')
 const { parseS3Filename } = require('./lib/utils')
 const { S3LiteError } = require('./lib/errors')
 
-const S3Lite = {}
+const S3Lite = {
+  OPEN_READONLY: sqlite3.OPEN_READONLY,
+  OPEN_READWRITE: sqlite3.OPEN_READWRITE,
+  OPEN_CREATE: sqlite3.OPEN_CREATE
+}
 
 /**
- *
  * @param {string} s3Filename
  * @param {Object} [options]
+ * @param {number} [options.mode=S3Lite.OPEN_READWRITE | S3Lite.OPEN_CREATE]
  * @param {string} [options.localFilePath=/tmp/s3lite]
+ * @param {Object} [options.s3Options]
+ * @param {boolean} [options.autoRollbackOnError=true]
  * @param {number} [options.acquireLockRetryTimeout=100]
  * @param {number} [options.remoteDatabaseCacheTime=1000]
- * @param {number} [options.maxRetryOnRemoteDatabaseUpdated=1]
  * @param {number} [options.maxLockLifetime=60000]
  * @param {number} [options.minLockLifetime=1000]
- * @param {Object} [s3Options]
  * @return {Database}
  */
 S3Lite.database = (
   s3Filename,
   {
+    mode = S3Lite.OPEN_READWRITE | S3Lite.OPEN_CREATE,
     localFilePath = '/tmp/s3lite',
     s3Options = {},
+    autoRollbackOnError = true,
     acquireLockRetryTimeout = 100,
     remoteDatabaseCacheTime = 1000,
-    maxRetryOnRemoteDatabaseUpdated = 1,
     maxLockLifetime = 60000,
     minLockLifetime = 1000
   } = {}
@@ -51,14 +57,6 @@ S3Lite.database = (
   ) {
     throw new S3LiteError(
       'remoteDatabaseCacheTime needs to be an positive number'
-    )
-  }
-  if (
-    typeof maxRetryOnRemoteDatabaseUpdated !== 'number' ||
-    maxRetryOnRemoteDatabaseUpdated < 0
-  ) {
-    throw new S3LiteError(
-      'maxRetryOnRemoteDatabaseUpdated needs to be an positive number'
     )
   }
   if (typeof maxLockLifetime !== 'number' || maxLockLifetime < 0) {
@@ -90,10 +88,14 @@ S3Lite.database = (
     remoteDatabaseCacheTime,
     acquireLockRetryTimeout,
     maxLockLifetime,
-    minLockLifetime
+    minLockLifetime,
+    allowNotFound: (mode & S3Lite.OPEN_CREATE) === S3Lite.OPEN_CREATE
   })
 
-  const executor = new Executor({ s3, maxRetryOnRemoteDatabaseUpdated })
+  const executor = new Executor({
+    s3,
+    autoRollbackOnError
+  })
   return new Database({ executor })
 }
 

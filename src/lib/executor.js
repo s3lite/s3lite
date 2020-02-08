@@ -1,9 +1,8 @@
 const sqlite3 = require('sqlite3')
 const Queue = require('./queue')
 const { now } = require('./utils')
-const { S3RemoteDatabaseUpdatedError } = require('./errors')
 
-module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
+module.exports = function ({ s3, autoRollbackOnError }) {
   const Executor = {}
 
   const queue = new Queue()
@@ -107,10 +106,10 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
       () =>
         new Promise((resolve, reject) => {
           sqliteInstance.close(error => {
-            sqliteInstance = null
             if (error) {
               reject(error)
             } else {
+              sqliteInstance = null
               resolve()
             }
           })
@@ -178,35 +177,21 @@ module.exports = function ({ s3, maxRetryOnRemoteDatabaseUpdated }) {
       : queue.enqueue(queueGroup, () => executeSql({ method, sql, params }))
     promises.push(result)
 
-    const isCommitQuery = isCommit(sql)
     if (!isSelect(sql)) {
-      if (!insideTransaction || isCommitQuery) {
+      if (!insideTransaction || isCommit(sql)) {
         promises.push(queue.enqueue(queueGroup, () => s3.pushDatabase()))
         promises.push(queue.enqueue(queueGroup, () => s3.releaseLock()))
         insideTransaction = false
-      } else if (isRollback(sql)) {
+      } else if (insideTransaction && isRollback(sql)) {
         promises.push(queue.enqueue(queueGroup, () => s3.releaseLock()))
         insideTransaction = false
       }
     }
 
-    return Promise.all(promises)
-      .then(() => result)
-      .catch(error => {
-        if (error instanceof S3RemoteDatabaseUpdatedError) {
-          if (isCommitQuery || counter >= maxRetryOnRemoteDatabaseUpdated) {
-            throw error
-          }
-          return Executor.exec({
-            method,
-            sql,
-            statement,
-            params,
-            counter: counter + 1
-          })
-        }
-        throw error
-      })
+    // const newQueueGroup = now() + Math.random()
+    // queue.enqueue(newQueueGroup, () => checkIfItsOk(promises))
+
+    return Promise.all(promises).then(() => result)
   }
 
   return Executor

@@ -2,8 +2,9 @@ const md5 = require('md5')
 const { now } = require('./utils')
 
 module.exports = function ({ minLockLifetime, maxLockLifetime }) {
-  const times = {}
   const LockFile = {}
+  const times = {}
+  const lockId = md5(`${now()}-${Math.random()}`)
 
   function getValidTo () {
     const validTo =
@@ -20,7 +21,7 @@ module.exports = function ({ minLockLifetime, maxLockLifetime }) {
 
   LockFile.getLockContent = () => {
     const lockObject = {
-      id: md5(`${now()}-${Math.random()}`),
+      id: lockId,
       validTo: getValidTo()
     }
     return JSON.stringify(lockObject)

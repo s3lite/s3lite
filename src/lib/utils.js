@@ -1,8 +1,11 @@
 const fs = require('fs')
+const md5 = require('md5')
 const mkdirp = require('mkdirp')
 const { S3LiteError } = require('./errors')
 
-const Utils = {}
+const Utils = {
+  PROCESS_ID: md5(Math.random() + new Date())
+}
 
 Utils.parseS3Filename = s3Filename => {
   if (typeof s3Filename !== 'string') {
@@ -53,7 +56,9 @@ Utils.parseS3Filename = s3Filename => {
 }
 
 Utils.getLocalFileName = (localFilePath, fileName) => {
-  return `${localFilePath.replace(/(\/)+$/, '')}/${fileName}`
+  return `${localFilePath.replace(/(\/)+$/, '')}/${fileName}.${
+    Utils.PROCESS_ID
+  }`
 }
 
 Utils.now = () => {
@@ -69,7 +74,8 @@ Utils.wait = ms => {
 }
 
 Utils.saveToFile = (fileName, body) => {
-  const directory = fileName.match(/(.*)[/\\]/)[1] || ''
+  const match = fileName.match(/(.*)[/\\]/)
+  const directory = match && match[1] ? match[1] : ''
 
   return new Promise((resolve, reject) => {
     mkdirp(directory, error => {
@@ -92,5 +98,14 @@ Utils.getFile = fileName => {
     })
   })
 }
+
+// Utils.removeFile = fileName => {
+//   return new Promise((resolve, reject) => {
+//     fs.unlink(fileName, error => {
+//       if (error) reject(error)
+//       else resolve(fileName)
+//     })
+//   })
+// }
 
 module.exports = Utils
