@@ -117,7 +117,7 @@ module.exports = function ({
         }
         if (error.statusCode === 404) {
           if (!allowNotFound) throw error
-          return saveToFile(localFile, '').then(() => localFile)
+          return saveToFile(localFile, '')
         }
         fileLastCheck = now()
         throw error

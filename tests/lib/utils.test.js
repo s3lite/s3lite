@@ -14,8 +14,10 @@ const readFile = jest
   .fn()
   .mockImplementation((fileName, fn) => fn(null, 'body'))
 const writeFile = jest.fn().mockImplementation((fileName, body, fn) => fn(null))
+const unlink = jest.fn().mockImplementation((fileName, fn) => fn(null))
 fs.readFile = readFile
 fs.writeFile = writeFile
+fs.unlink = unlink
 
 describe('Utils', () => {
   describe('Utils.parseS3Filename', () => {
@@ -228,6 +230,26 @@ describe('Utils', () => {
     test('should reject promise when error occurred', async () => {
       readFile.mockImplementationOnce((fileName, fn) => fn('error'))
       await expect(Utils.getFile('test')).rejects.toEqual('error')
+    })
+  })
+
+  describe('Utils.removeFile', () => {
+    beforeEach(() => {
+      unlink.mockClear()
+    })
+
+    test('should be a function', () => {
+      expect(Utils.removeFile).toBeFunction()
+    })
+
+    test('should resolve promise when properly remove the file', async () => {
+      await expect(Utils.removeFile('test')).resolves.toEqual('test')
+      expect(readFile).toBeCalled()
+    })
+
+    test('should reject promise when error occurred', async () => {
+      unlink.mockImplementationOnce((fileName, fn) => fn('error'))
+      await expect(Utils.removeFile('test')).rejects.toEqual('error')
     })
   })
 })

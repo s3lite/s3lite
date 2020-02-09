@@ -1,8 +1,13 @@
 jest.mock('sqlite3')
+jest.mock('../../src/lib/utils', () => jest.fn())
 
 const sqlite3 = require('sqlite3')
+const Utils = require('../../src/lib/utils')
 
-const Executor = require('../../src/lib/executor')
+const now = jest.fn().mockReturnValue(1e8)
+const removeFile = jest.fn().mockReturnValue(Promise.resolve('test'))
+Utils.now = now
+Utils.removeFile = removeFile
 
 const acquireLock = jest.fn()
 const releaseLock = jest.fn()
@@ -23,6 +28,8 @@ const s3 = {
   pullDatabase,
   pushDatabase
 }
+
+const Executor = require('../../src/lib/executor')
 
 describe('Executor', () => {
   beforeEach(() => {
@@ -54,6 +61,7 @@ describe('Executor', () => {
         close
       }
     })
+    removeFile.mockClear()
   })
 
   describe('Executor.executeSql', () => {
@@ -559,6 +567,24 @@ describe('Executor', () => {
 
       expect(Database.mock.calls.length).toBe(1)
       expect(close.mock.calls.length).toBe(1)
+    })
+
+    test('should remove file after sqlite instance has been closed', async () => {
+      const executor = new Executor({ s3 })
+      await executor.close()
+
+      expect(close.mock.calls.length).toBe(1)
+      expect(removeFile.mock.calls.length).toBe(1)
+      expect(removeFile).toHaveBeenCalledAfter(close)
+    })
+
+    test('should ignore error when remove file rejects', async () => {
+      removeFile.mockReturnValueOnce(Promise.reject(new Error('error')))
+
+      const executor = new Executor({ s3 })
+      await expect(executor.close()).resolves.toBeUndefined()
+
+      expect(removeFile.mock.calls.length).toBe(1)
     })
 
     test('should rethrow error from close method in sqlite instance', async () => {

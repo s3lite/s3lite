@@ -1,6 +1,6 @@
 const sqlite3 = require('sqlite3')
 const Queue = require('./queue')
-const { now } = require('./utils')
+const { now, removeFile } = require('./utils')
 
 module.exports = function ({ s3, autoRollbackOnError }) {
   const Executor = {}
@@ -8,6 +8,7 @@ module.exports = function ({ s3, autoRollbackOnError }) {
   const queue = new Queue()
   let insideTransaction = false
   let sqliteInstance
+  let sqliteInstanceLocalFile
 
   function isSelect (sql) {
     return /^select/i.test(sql.trim())
@@ -29,6 +30,7 @@ module.exports = function ({ s3, autoRollbackOnError }) {
     return new Promise((resolve, reject) => {
       s3.pullDatabase(useCache)
         .then(localFile => {
+          sqliteInstanceLocalFile = localFile
           if (sqliteInstance) {
             resolve(sqliteInstance)
           } else {
@@ -116,6 +118,11 @@ module.exports = function ({ s3, autoRollbackOnError }) {
         })
     )
     promises.push(result)
+    promises.push(
+      queue.enqueue(queueGroup, () =>
+        removeFile(sqliteInstanceLocalFile).catch(() => {})
+      )
+    )
     return Promise.all(promises).then(() => result)
   }
 

@@ -99,13 +99,13 @@ Utils.getFile = fileName => {
   })
 }
 
-// Utils.removeFile = fileName => {
-//   return new Promise((resolve, reject) => {
-//     fs.unlink(fileName, error => {
-//       if (error) reject(error)
-//       else resolve(fileName)
-//     })
-//   })
-// }
+Utils.removeFile = fileName => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(fileName, error => {
+      if (error) reject(error)
+      else resolve(fileName)
+    })
+  })
+}
 
 module.exports = Utils
