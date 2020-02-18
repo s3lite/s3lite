@@ -7,7 +7,7 @@
 [![Standard](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![License](https://img.shields.io/npm/l/s3lite)](https://github.com/s3lite/s3lite/blob/master/LICENSE)
 
-A wrapper library for SQLite that keeps database file on Amazon S3 storage and adds support for promises and async/await.
+A wrapper library for SQLite that keeps a database file on Amazon S3 storage and adds support for promises and async/await.
 
 ## Usage
 
@@ -53,10 +53,10 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 
 ## How It Works
 
-- To execute select-like sql query S3Lite pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query and return result on success.<br>
-- To execute non-select-like sql query S3Lite acquire lock on s3 bucket, then pull the database file from s3 bucket if database file has changed. Then initialize the Sqlite object if needed, execute query. After successful executing query S3Lite push the database to S3 bucket and release lock, then return result.
+- To execute select-like sql query: S3Lite pulls the database file from s3 bucket if database file has changed. Then initializes the Sqlite object if necessary, executes query and returns the result on success.<br>
+- To execute non-select-like sql query: S3Lite acquires lock on s3 bucket, then pulls the database file from s3 bucket if database file has changed. Then initializes the Sqlite object if necessary and executes query. After successfully executing query S3Lite pushes database to S3 bucket and releases lock, then returns the result.
 
-<details><summary>For details look on the architecture diagram:</summary>
+<details><summary>For details look at the architecture diagram:</summary>
 <p>
 
 [![Architecture diagram](https://raw.githubusercontent.com/s3lite/s3lite/master/diagrams/s3lite-diagram.png)](https://github.com/s3lite/s3lite)
@@ -64,7 +64,7 @@ const data = await db.all('SELECT * FROM table WHERE column = ?', 'value')
 </p>
 </details>
 
-Minimal AWS S3 Policy to library works:
+Minimal AWS S3 Policy required:
 
 ```json
 {
@@ -89,7 +89,7 @@ Minimal AWS S3 Policy to library works:
 
 ## API Documentation
 
-> Since this library is using node-sqlite3 under the hood all information about parameters in the specified methods can be found [here](https://github.com/mapbox/node-sqlite3/wiki/API).
+> Since this library is using node-sqlite3 under the hood, all information about parameters in the specified methods can be found [here](https://github.com/mapbox/node-sqlite3/wiki/API).
 
 ### S3Lite
 
@@ -97,8 +97,8 @@ Minimal AWS S3 Policy to library works:
 
 `static` `database (s3FileName, [options])` `→` `{Database}`
 
-Init Database object. It **doesn't** fetch database file or open SQLite connection. Database object is in lazy mode, it means during first query it will fetch the database file and open connection to SQLite.<br>
-If you need to open database before executing the sql query use the `db.open()` method.
+Init Database object. It **doesn't** fetch a database file or open SQLite connection. The database object is in lazy mode, it means during first query it will fetch the database file and open connection to SQLite.<br>
+If you need to open a database before executing sql query, use `db.open()` method.
 
 **Parameters:**
 
@@ -107,8 +107,8 @@ If you need to open database before executing the sql query use the `db.open()` 
   - Virtual Hosted Style Access: `https://bucket.s3.region.amazonaws.com/key`
   - Path-Style Access: `https://s3.region.amazonaws.com/bucket-name/key`
   - Aws-Cli Style Access: `s3://bucket-name/key`<br>
-    As you can see in this case there is no information about region (which is required by aws-cli). To provide region use `s3Options` parameter.<br>
-    For more information see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
+    As you can see in this case there is no information about the region (which is required by aws-cli). To provide region use `s3Options` parameter.<br>
+    For more information, see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
 - `{Object} [options]` _(optional)_:
 
 | Type       | Name                      | _Default_                                         | Description                                                                                              |
@@ -146,13 +146,13 @@ const db = S3Lite.database(
 
 `async` `all (sql, [params...])` `→` `{Promise<Array>}`
 
-Runs the sql query with the specified parameters and returns `Promise` of `Array` if the query has been executed successfully.<br>
+Run the sql query with the specified parameters and return `Promise` of `Array` if the query has been executed successfully.<br>
 If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
 
 - `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as an object.
 
 **Returns:**
 
@@ -179,13 +179,13 @@ db.all('SELECT id, name FROM table LIMIT $a', { $a: 10 }).then(data => {
 
 `async` `get (sql, [params...])` `→` `{Promise<Object>}`
 
-Runs the sql query with the specified parameters and returns `Promise` of `Object` if the query has been executed successfully.<br>
+Run the sql query with the specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
 If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
 
-- `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{string} sql`: The sql query to run. It can contain placeholder to be bound by the given parameters.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -240,12 +240,12 @@ db.exec(
 
 `async` `run (sql, [params...])` `→` `{Promise<{lastID: number, changes: number, sql: string}>}`
 
-Runs the sql query with the specified parameters and returns `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
+Run the sql query with the specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
 - `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -277,7 +277,7 @@ Prepare a statement
 **Parameters:**
 
 - `{string} sql`: The sql query to run. It can contains placeholder to be bound by the given parameters.
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -349,12 +349,12 @@ It contains three properties:
 
 `async` `all ([params...])` `→` `{Promise<Array>}`
 
-Execute the statement with the specified parameters and returns `Promise` of `Array` if the query has been executed successfully.<br>
+Execute the statement with the specified parameters and returns`Promise` of `Array` if the query has been executed successfully.<br>
 If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -384,12 +384,12 @@ db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
 
 `async` `get ([params...])` `→` `{Promise<Object>}`
 
-Execute the statement with the specified parameters and returns `Promise` of `Object` if the query has been executed successfully.<br>
+Execute the statement with the specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
 If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -416,11 +416,11 @@ db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
 
 `async` `run ([params...])` `→` `{Promise<Statement>}`
 
-Execute the statement with the specified parameters and returns `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
+Execute the statement with the specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
-- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as an arguments, as an array or as na object.
+- `{...*|Object|Array} [params]` _(optional)_: Parameters to bind. There are three ways to pass parameters: as arguments, as an array or as na object.
 
 **Returns:**
 
@@ -447,7 +447,7 @@ db.prepare('INSERT INTO test VALUES (NULL, ?)').then(stmt => {
 
 `async` `reset ()` `→` `{Promise<Statement>}`
 
-Reset the cursor of the statement. It's require for re-execute the query with the same params.
+Reset the cursor of the statement. It's required for re-execution of the query with the same parameters.
 
 **Returns:**
 
