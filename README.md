@@ -146,7 +146,7 @@ const db = S3Lite.database(
 
 `async` `all (sql, [params...])` `→` `{Promise<Array>}`
 
-Run the sql query with the specified parameters and return `Promise` of `Array` if the query has been executed successfully.<br>
+Run the sql query with specified parameters and return `Promise` of `Array` if the query has been executed successfully.<br>
 If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
@@ -179,7 +179,7 @@ db.all('SELECT id, name FROM table LIMIT $a', { $a: 10 }).then(data => {
 
 `async` `get (sql, [params...])` `→` `{Promise<Object>}`
 
-Run the sql query with the specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
+Run the sql query with specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
 If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
@@ -240,7 +240,7 @@ db.exec(
 
 `async` `run (sql, [params...])` `→` `{Promise<{lastID: number, changes: number, sql: string}>}`
 
-Run the sql query with the specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
+Run the sql query with specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
@@ -349,7 +349,7 @@ It contains three properties:
 
 `async` `all ([params...])` `→` `{Promise<Array>}`
 
-Execute the statement with the specified parameters and returns`Promise` of `Array` if the query has been executed successfully.<br>
+Execute the statement with specified parameters and returns`Promise` of `Array` if the query has been executed successfully.<br>
 If no data found, empty array has been resolved by the promise.
 
 **Parameters:**
@@ -384,7 +384,7 @@ db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
 
 `async` `get ([params...])` `→` `{Promise<Object>}`
 
-Execute the statement with the specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
+Execute the statement with specified parameters and return `Promise` of `Object` if the query has been executed successfully.<br>
 If no data found, `undefined` has been resolved by the promise.
 
 **Parameters:**
@@ -416,7 +416,7 @@ db.prepare('SELECT * FROM test WHERE column = ?').then(stmt => {
 
 `async` `run ([params...])` `→` `{Promise<Statement>}`
 
-Execute the statement with the specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
+Execute the statement with specified parameters and return `Promise` of `Object` containing `{lastID: number, changes: number, sql: string}` if the query has been executed successfully.
 
 **Parameters:**
 
