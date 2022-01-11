@@ -37,7 +37,7 @@ module.exports = function ({
       })
       .promise()
       .then(data => {
-        if (data.ETag !== lockMD5) {
+        if (data.ETag !== `"${lockMD5}"`) {
           return wait(acquireLockRetryTimeout).then(() => S3.acquireLock())
         }
         return data
@@ -136,7 +136,7 @@ module.exports = function ({
         })
         .promise()
         .then(data => {
-          if (data.ETag !== bodyMD5) {
+          if (data.ETag !== `"${bodyMD5}"`) {
             throw new S3LiteError('ETag different from ContentMD5')
           }
           lockFile.saveTime('pushDatabase', startTime)
